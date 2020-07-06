@@ -1,0 +1,11 @@
+document.querySelector("tbody").
+  insertAdjacentHTML(
+    'beforeend',
+    '<%= j render(partial: "email", collection: @emails) %>'
+  );
+
+<% if @pagy.next %>
+  document.querySelector("input[name=page]").value = '<%= @pagy.next %>'
+<% else %>
+  document.querySelector("form").remove()
+<% end %>
