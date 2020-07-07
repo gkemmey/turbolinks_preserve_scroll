@@ -3,7 +3,7 @@ class EmailsController < ApplicationController
 
   def index
     preserve_scroll
-    @pagy, @emails = paginates(Email.all, with_previously_loaded: true)
+    @pagy, @emails = paginates(Email.all)
   end
 
   def show

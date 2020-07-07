@@ -2,13 +2,12 @@ module Pagination
   extend ActiveSupport::Concern
 
   class Paginator
-    attr_reader :controller, :collection, :items, :pagy, :with_previously_loaded
+    attr_reader :controller, :collection, :items, :pagy
     delegate :request, :session, to: :controller
 
-    def initialize(controller, collection, with_previously_loaded: false)
+    def initialize(controller, collection)
       @controller = controller
       @collection = collection
-      @with_previously_loaded = with_previously_loaded
       @items = []
 
       paginate
@@ -17,32 +16,17 @@ module Pagination
     private
 
       def paginate
-        if request.full_page_refresh?
-          clear_session_cache
-          single_page_of_items
-
-        elsif async_load_just_the_next_page?
-          single_page_of_items
-
-        else
-          all_previously_loaded_items
-        end
+        load_just_the_next_page? ? single_page_of_items : all_previously_loaded_items
       end
 
-      def async_load_just_the_next_page?
-        # requires that however you "load more" -- inifinite scroll, a button, whatever -- that
+      def load_just_the_next_page?
+        # requires that however you "load more" -- infinite scroll, a button, whatever -- that
         # that request marks itself as an xhr request. remote forms do.
         request.xhr?
       end
 
       def cache_key
         "#{controller.controller_name}_#{controller.action_name}"
-      end
-
-      def clear_session_cache
-        if (caches = session[:pagination])
-          caches.delete(cache_key)
-        end
       end
 
       def session_cache
@@ -78,7 +62,7 @@ module Pagination
     before_action { session.delete(:pagination) if request.full_page_refresh? }
   end
 
-  def paginates(collection, options = {})
-    Paginator.new(self, collection, **options).then { |paginator| [paginator.pagy, paginator.items]}
+  def paginates(collection)
+    Paginator.new(self, collection).then { |paginator| [paginator.pagy, paginator.items]}
   end
 end

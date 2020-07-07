@@ -5,7 +5,7 @@
 //
 Turbolinks.savedScrolls = {}
 
-addEventListener("turbolinks:render", function(event) {
+document.addEventListener("turbolinks:render", function(event) {
   const savedScroll = Turbolinks.savedScrolls[window.location.href]
   if (!savedScroll) { return; }
 

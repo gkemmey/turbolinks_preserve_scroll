@@ -1,4 +1,4 @@
-An example of preserving pagination results and scroll position with Rail's default turbolinks and HTML everything approach.
+An example of restoring pagination results and scroll position with Rails's default Turbolinks and HTML everything approach, which I wrote more about here: _[Pagination and Scroll Restoration with Turbolinks](http://blog.graykemmey.com/2020/07/07/pagination-and-scroll-restoration-with-turbolinks/)_.
 
 ![GIF of running app](./example.gif)
 
