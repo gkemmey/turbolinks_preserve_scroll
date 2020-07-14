@@ -1,4 +1,5 @@
 module Pagination
+  using InspectRequest
   extend ActiveSupport::Concern
 
   class Paginator

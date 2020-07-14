@@ -1,5 +1,5 @@
-module ActionDispatch
-  class Request
+module InspectRequest
+  refine ActionDispatch::Request do
     def turbolinks?
       !get_header("HTTP_TURBOLINKS_REFERRER").nil?
     end
