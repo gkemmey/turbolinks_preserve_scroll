@@ -45,6 +45,30 @@ class PaginationAndScrollRestorationTest < ApplicationSystemTestCase
     end
   end
 
+  def test_opening_an_email_in_a_new_tab_still_keeps_scroll_in_the_original_tab_and_loses_it_in_the_new_tab
+    visit emails_path
+
+    click_load_more
+    click_load_more
+    scroll_to_email(30)
+
+    original_tab = page.current_window
+    new_tab = open_email_in_new_tab(30)
+
+    assert_scroll_restored do
+      within_window(original_tab) { open_email(30) }
+
+      within_window(new_tab) do
+        click_back_to_inbox
+
+        assert_pagination_lost
+        assert_scroll_lost
+      end
+
+      within_window(original_tab) { click_back_to_inbox }
+    end
+  end
+
   private
 
     def click_load_more
@@ -64,6 +88,18 @@ class PaginationAndScrollRestorationTest < ApplicationSystemTestCase
 
     def open_email(number)
       email(number).find("a", text: "Show", visible: false).click
+    end
+
+    def open_email_in_new_tab(number)
+      link = email(number).find("a", text: "Show", visible: false)["href"]
+      tab_window = open_new_window(:tab)
+
+      within_window(tab_window) do
+        visit(link)
+        page.has_content?("Subject ##{number}")
+      end
+
+      tab_window
     end
 
     def click_back_to_inbox
@@ -100,5 +136,16 @@ class PaginationAndScrollRestorationTest < ApplicationSystemTestCase
                body_scroll_top_before == body_scroll_top_after,
              "Expected scroll before #{{ document: document_scroll_top_before, body: body_scroll_top_before }} " \
                "to equal scroll after #{{ document: document_scroll_top_after, body: body_scroll_top_after }}"
+    end
+
+    def assert_scroll_lost
+      document_scroll_top = execute_script("return document.documentElement.scrollTop")
+      body_scroll_top = execute_script("return document.body.scrollTop")
+
+      assert document_scroll_top == 0 && body_scroll_top == 0
+    end
+
+    def assert_pagination_lost
+      assert_equal 20, emails.count
     end
 end
