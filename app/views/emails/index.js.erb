@@ -1,11 +1,19 @@
-document.querySelector("tbody").
-  insertAdjacentHTML(
-    'beforeend',
-    '<%= j render(partial: "email", collection: @emails) %>'
-  );
+(function() {
+  document.querySelector("tbody").
+    insertAdjacentHTML(
+      'beforeend',
+      '<%= j render(partial: "email", collection: @emails) %>'
+    );
 
-<% if @pagy.next %>
-  document.querySelector("input[name=page]").value = '<%= @pagy.next %>'
-<% else %>
-  document.querySelector("form").remove()
-<% end %>
+  <% if @pagy.next %>
+    document.querySelector("input[name=page]").value = '<%= @pagy.next %>'
+  <% else %>
+    document.querySelector("form").remove()
+  <% end %>
+
+  let url = '<%= current_page_path %>'
+
+  history.replaceState({ turbolinks: { restorationIdentifier: '<%= SecureRandom.uuid %>' } }, '', url)
+  
+  sessionStorage.setItem('<%= last_page_fetched_key %>', url)
+})();

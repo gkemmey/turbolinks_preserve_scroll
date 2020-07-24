@@ -22,10 +22,12 @@
   <%= form_with url: emails_path, method: :get do |f| %>
 
     <%= f.hidden_field :page, value: @pagy.next %>
-    <%= f.button "Load More" %>
+    <%= f.button "Load More", name: nil %>
   <% end %>
 <% end %>
 
 <br>
 
 <%= link_to 'New Email', new_email_path %>
+
+<%= clear_session_storage_when_fresh_unpaginated_listing_loaded %>

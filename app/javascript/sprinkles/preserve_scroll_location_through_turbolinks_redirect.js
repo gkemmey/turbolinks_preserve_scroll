@@ -17,7 +17,7 @@ document.addEventListener("turbolinks:render", function(event) {
     }
   }
 
-  if (savedScroll.document != null) {
+  if (savedScroll.body != null) {
     if (savedScroll.body < document.body.scrollHeight) {
       document.body.scrollTop = savedScroll.body
     }

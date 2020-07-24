@@ -3,7 +3,7 @@ module Pagination
 
   class Paginator
     attr_reader :controller, :collection, :items, :pagy
-    delegate :request, :session, to: :controller
+    delegate :request, to: :controller
 
     def initialize(controller, collection)
       @controller = controller
@@ -25,44 +25,61 @@ module Pagination
         request.xhr?
       end
 
-      def cache_key
-        "#{controller.controller_name}_#{controller.action_name}"
-      end
-
-      def session_cache
-        if (caches = session[:pagination])
-          caches[cache_key]
-        end
-      end
-
-      def write_to_session_cache(page)
-        session[:pagination] ||= {}
-        session[:pagination][cache_key] = page
-      end
-
-      def max_page_loaded
-        [controller.send(:pagy_get_vars, collection, {})[:page].try(:to_i), session_cache, 1].compact.max
-      end
-
       def single_page_of_items
-        @pagy, @items = controller.send(:pagy, collection).tap { write_to_session_cache(max_page_loaded) }
+        @pagy, @items = controller.send(:pagy, collection)
       end
 
       def all_previously_loaded_items
-        1.upto(max_page_loaded).each do |page|
+        1.upto(page_to_restore_to).each do |page|
           controller.send(:pagy, collection, page: page).then do |(pagy_object, results)|
             @pagy = pagy_object
             @items += results
           end
         end
       end
+
+      def page_to_restore_to
+        [controller.send(:pagy_get_vars, collection, {})[:page].try(:to_i), 1].compact.max
+      end
   end
 
-  included do
-    before_action { session.delete(:pagination) if request.full_page_refresh? }
+  def clear_session_storage_when_fresh_unpaginated_listing_loaded
+    script = <<~JS
+      sessionStorage.removeItem('#{last_page_fetched_key}');
+    JS
+
+    helpers.content_tag(:script, script.html_safe, type: "text/javascript",
+                                                   data: { turbolinks_eval: "false" })
+  end
+
+  def current_page_path
+    request.fullpath
+  end
+
+  def fresh_unpaginated_listing
+    url_for(only_path: true)
+  end
+
+  def last_page_fetched_key
+    "#{controller_name}_index"
   end
 
   def paginates(collection)
-    Paginator.new(self, collection).then { |paginator| [paginator.pagy, paginator.items]}
+    Paginator.new(self, collection).then { |paginator| [paginator.pagy, paginator.items] }
+  end
+
+  def redirecting_to_fresh_unpaginated_listing?
+    if request.full_page_refresh? && params[:page]
+      redirect_to fresh_unpaginated_listing
+      return true
+    end
+
+    false
+  end
+
+  included do
+    helper_method :clear_session_storage_when_fresh_unpaginated_listing_loaded,
+                  :current_page_path,
+                  :last_page_fetched_key
   end
 end
