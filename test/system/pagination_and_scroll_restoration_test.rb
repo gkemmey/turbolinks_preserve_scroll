@@ -2,7 +2,7 @@ require "application_system_test_case"
 
 class PaginationAndScrollRestorationTest < ApplicationSystemTestCase
   def test_the_base_case_works
-    visit emails_path
+    go_to_inbox
 
     assert_equal 20, emails.count
 
@@ -19,7 +19,7 @@ class PaginationAndScrollRestorationTest < ApplicationSystemTestCase
   end
 
   def test_the_back_button_works
-    visit emails_path
+    go_to_inbox
 
     click_load_more
     click_load_more
@@ -32,7 +32,7 @@ class PaginationAndScrollRestorationTest < ApplicationSystemTestCase
   end
 
   def test_you_can_click_through_to_edit_click_back_on_that_page_and_still_recover
-    visit emails_path
+    go_to_inbox
 
     click_load_more
     click_load_more
@@ -46,7 +46,7 @@ class PaginationAndScrollRestorationTest < ApplicationSystemTestCase
   end
 
   def test_opening_an_email_in_a_new_tab_still_keeps_scroll_in_the_original_tab_and_loses_it_in_the_new_tab
-    visit emails_path
+    go_to_inbox
 
     click_load_more
     click_load_more
@@ -69,7 +69,62 @@ class PaginationAndScrollRestorationTest < ApplicationSystemTestCase
     end
   end
 
+  def test_you_can_have_two_inboxes_open_in_two_different_tabs_each_juggling_their_own_scroll_and_pagination
+    go_to_inbox
+
+    original_tab = page.current_window
+    new_tab = go_to_inbox_in_new_tab
+
+    within_window(original_tab) do
+      click_load_more
+      click_load_more
+      scroll_to_email(30)
+    end
+
+    within_window(new_tab) do
+      click_load_more
+      click_load_more
+      click_load_more
+      scroll_to_email(50)
+    end
+
+    within_window(original_tab) do
+      assert_scroll_restored do
+        open_email(30)
+        click_back_to_inbox
+      end
+
+      assert email(30, visible: true)
+      assert 60, emails.count
+    end
+
+    within_window(new_tab) do
+      assert_scroll_restored do
+        open_email(50)
+        click_back_to_inbox
+      end
+
+      assert email(50, visible: true)
+      assert 80, emails.count
+    end
+  end
+
   private
+
+    def go_to_inbox
+      visit emails_path
+      page.has_css?("h1", text: "Emails")
+    end
+
+    def go_to_inbox_in_new_tab
+      tab_window = open_new_window(:tab)
+
+      within_window(tab_window) do
+        go_to_inbox
+      end
+
+      tab_window
+    end
 
     def click_load_more
       lenr = last_email_number_rendered
@@ -82,8 +137,8 @@ class PaginationAndScrollRestorationTest < ApplicationSystemTestCase
       page.find_all("tbody > tr", visible: false)
     end
 
-    def email(number)
-      page.find("tr", text: "Subject #30", visible: false)
+    def email(number, visible: false)
+      page.find("tr", text: "Subject ##{number}", visible: visible)
     end
 
     def open_email(number)
