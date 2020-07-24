@@ -3,7 +3,7 @@ module Pagination
 
   class Paginator
     attr_reader :controller, :collection, :items, :pagy
-    delegate :request, :session, to: :controller
+    delegate :request, to: :controller
 
     def initialize(controller, collection)
       @controller = controller

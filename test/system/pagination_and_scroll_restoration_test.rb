@@ -31,6 +31,19 @@ class PaginationAndScrollRestorationTest < ApplicationSystemTestCase
     end
   end
 
+  def test_refreshing_starts_over
+    go_to_inbox
+
+    click_load_more
+    click_load_more
+    scroll_to_email(30)
+
+    refresh_inbox
+
+    assert_pagination_lost
+    assert_scroll_lost unless using_safari?
+  end
+
   def test_you_can_click_through_to_edit_click_back_on_that_page_and_still_recover
     go_to_inbox
 
@@ -126,6 +139,11 @@ class PaginationAndScrollRestorationTest < ApplicationSystemTestCase
       tab_window
     end
 
+    def refresh_inbox
+      page.refresh
+      page.has_css?("h1", text: "Emails")
+    end
+
     def click_load_more
       lenr = last_email_number_rendered
       find('button[type="submit"]', text: "Load More", visible: false).click
@@ -202,5 +220,9 @@ class PaginationAndScrollRestorationTest < ApplicationSystemTestCase
 
     def assert_pagination_lost
       assert_equal 20, emails.count
+    end
+
+    def using_safari?
+      self.class.driver.instance_variable_get(:@browser).name == :safari
     end
 end
