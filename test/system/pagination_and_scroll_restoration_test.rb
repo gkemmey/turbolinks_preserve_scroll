@@ -18,6 +18,33 @@ class PaginationAndScrollRestorationTest < ApplicationSystemTestCase
     end
   end
 
+  def test_the_back_button_works
+    visit emails_path
+
+    click_load_more
+    click_load_more
+    scroll_to_email(30)
+
+    assert_scroll_restored do
+      open_email(30)
+      page.go_back
+    end
+  end
+
+  def test_you_can_click_through_to_edit_click_back_on_that_page_and_still_recover
+    visit emails_path
+
+    click_load_more
+    click_load_more
+    scroll_to_email(30)
+
+    assert_scroll_restored do
+      open_email(30)
+      click_edit
+      click_back_to_inbox
+    end
+  end
+
   private
 
     def click_load_more
@@ -44,25 +71,25 @@ class PaginationAndScrollRestorationTest < ApplicationSystemTestCase
       page.has_css?("h1", text: "Emails")
     end
 
+    def click_edit
+      click_on "Edit"
+      page.has_content?("Editing Email")
+    end
+
     def last_email_number_rendered
       emails.last.text.scan(/#(\d+)/).first.first.to_i
     end
 
     def scroll_to_email(number)
-      scroll_to page.find("td", text: "Subject ##{number}", visible: false)
-    end
-
-    def scroll_to(element)
-      script = <<-JS
-        return arguments[0].scrollIntoView(true);
-      JS
-
-      page.execute_script(script, element.native)
+      scroll_to page.find("td", text: "Subject ##{number}", visible: false), align: :top
     end
 
     def assert_scroll_restored
       document_scroll_top_before = execute_script("return document.documentElement.scrollTop")
       body_scroll_top_before = execute_script("return document.body.scrollTop")
+
+      # it'd be hard to say you're testing for sure if they're both 0, so let's just fail it
+      assert_not document_scroll_top_before == 0 && body_scroll_top_before == 0
 
       yield
 
