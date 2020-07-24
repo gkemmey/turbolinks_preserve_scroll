@@ -5,7 +5,7 @@ class EmailsController < ApplicationController
     preserve_scroll
 
     return if skipping_restoring_pagination?
-    @pagy, @emails = paginates(Email.all)
+    @pagy, @emails = paginates(Email.all.order(:predictably))
   end
 
   def show

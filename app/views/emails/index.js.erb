@@ -13,9 +13,7 @@
 
   let url = '<%= url_for(only_path: true, params: params.to_unsafe_h.slice(:page)) %>'
 
-  history.replaceState(
-    { turbolinks: { restorationIdentifier: '<%= SecureRandom.uuid %>' } }, '', url
-  )
+  history.replaceState({ turbolinks: { restorationIdentifier: '<%= SecureRandom.uuid %>' } }, '', url)
 
   sessionStorage.setItem("emails", url)
 })();
