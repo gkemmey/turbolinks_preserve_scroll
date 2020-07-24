@@ -1,9 +1,9 @@
-on(document, "click", "a[data-restore-pagination]", function(event) {
+on(document, "click", "a[data-restores-last-page-fetched]", function(event) {
   const { target: a } = event
-  const { restorePagination: key } = a.dataset
-  const lastPage = sessionStorage.getItem(key)
+  const { restoresLastPageFetched: key } = a.dataset
+  const lastPageFetched = sessionStorage.getItem(key)
 
-  if (lastPage) {
-    a.href = lastPage
+  if (lastPageFetched) {
+    a.href = lastPageFetched
   }
 })

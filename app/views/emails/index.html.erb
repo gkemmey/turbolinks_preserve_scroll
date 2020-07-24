@@ -22,7 +22,7 @@
   <%= form_with url: emails_path, method: :get do |f| %>
 
     <%= f.hidden_field :page, value: @pagy.next %>
-    <%= f.button "Load More" %>
+    <%= f.button "Load More", name: nil %>
   <% end %>
 <% end %>
 
@@ -30,6 +30,4 @@
 
 <%= link_to 'New Email', new_email_path %>
 
-<script type="text/javascript" data-turbolinks-eval="false">
-  sessionStorage.removeItem("emails");
-</script>
+<%= clear_session_storage_when_fresh_unpaginated_listing_loaded %>

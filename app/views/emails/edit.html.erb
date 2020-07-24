@@ -3,4 +3,4 @@
 <%= render 'form', email: @email %>
 
 <%= link_to 'Show', @email %> |
-<%= link_to 'Back', emails_path, data: { restore_pagination: "emails" } %>
+<%= link_to 'Back', emails_path, data: { restores_last_page_fetched: last_page_fetched_key } %>

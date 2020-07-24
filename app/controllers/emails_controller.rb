@@ -4,7 +4,7 @@ class EmailsController < ApplicationController
   def index
     preserve_scroll
 
-    return if skipping_restoring_pagination?
+    return if redirecting_to_fresh_unpaginated_listing?
     @pagy, @emails = paginates(Email.all.order(:predictably))
   end
 

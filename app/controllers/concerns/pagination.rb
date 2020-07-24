@@ -39,21 +39,47 @@ module Pagination
       end
 
       def page_to_restore_to
-        # it is just the page params, but guarded against being missing
         [controller.send(:pagy_get_vars, collection, {})[:page].try(:to_i), 1].compact.max
       end
   end
 
-  def skipping_restoring_pagination?
+  def clear_session_storage_when_fresh_unpaginated_listing_loaded
+    script = <<~JS
+      sessionStorage.removeItem('#{last_page_fetched_key}');
+    JS
+
+    helpers.content_tag(:script, script.html_safe, type: "text/javascript",
+                                                   data: { turbolinks_eval: "false" })
+  end
+
+  def current_page_path
+    request.fullpath
+  end
+
+  def fresh_unpaginated_listing
+    url_for(only_path: true)
+  end
+
+  def last_page_fetched_key
+    "#{controller_name}_index"
+  end
+
+  def paginates(collection)
+    Paginator.new(self, collection).then { |paginator| [paginator.pagy, paginator.items] }
+  end
+
+  def redirecting_to_fresh_unpaginated_listing?
     if request.full_page_refresh? && params[:page]
-      redirect_to url_for(only_path: true)
+      redirect_to fresh_unpaginated_listing
       return true
     end
 
     false
   end
 
-  def paginates(collection)
-    Paginator.new(self, collection).then { |paginator| [paginator.pagy, paginator.items]}
+  included do
+    helper_method :clear_session_storage_when_fresh_unpaginated_listing_loaded,
+                  :current_page_path,
+                  :last_page_fetched_key
   end
 end
