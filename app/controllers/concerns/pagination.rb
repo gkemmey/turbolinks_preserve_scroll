@@ -25,41 +25,32 @@ module Pagination
         request.xhr?
       end
 
-      def cache_key
-        "#{controller.controller_name}_#{controller.action_name}"
-      end
-
-      def session_cache
-        if (caches = session[:pagination])
-          caches[cache_key]
-        end
-      end
-
-      def write_to_session_cache(page)
-        session[:pagination] ||= {}
-        session[:pagination][cache_key] = page
-      end
-
-      def max_page_loaded
-        [controller.send(:pagy_get_vars, collection, {})[:page].try(:to_i), session_cache, 1].compact.max
-      end
-
       def single_page_of_items
-        @pagy, @items = controller.send(:pagy, collection).tap { write_to_session_cache(max_page_loaded) }
+        @pagy, @items = controller.send(:pagy, collection)
       end
 
       def all_previously_loaded_items
-        1.upto(max_page_loaded).each do |page|
+        1.upto(page_to_restore_to).each do |page|
           controller.send(:pagy, collection, page: page).then do |(pagy_object, results)|
             @pagy = pagy_object
             @items += results
           end
         end
       end
+
+      def page_to_restore_to
+        # it is just the page params, but guarded against being missing
+        [controller.send(:pagy_get_vars, collection, {})[:page].try(:to_i), 1].compact.max
+      end
   end
 
-  included do
-    before_action { session.delete(:pagination) if request.full_page_refresh? }
+  def skipping_restoring_pagination?
+    if request.full_page_refresh? && params[:page]
+      redirect_to url_for(only_path: true)
+      return true
+    end
+
+    false
   end
 
   def paginates(collection)

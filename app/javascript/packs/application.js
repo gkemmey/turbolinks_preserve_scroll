@@ -20,4 +20,5 @@ require("channels")
 require(`script-loader!sprinkles/polyfills.js`)
 
 // -------- order doesn't matter --------
+require(`script-loader!sprinkles/pagination.js`)
 require(`script-loader!sprinkles/preserve_scroll_location_through_turbolinks_redirect.js`)

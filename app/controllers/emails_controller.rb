@@ -3,6 +3,8 @@ class EmailsController < ApplicationController
 
   def index
     preserve_scroll
+
+    return if skipping_restoring_pagination?
     @pagy, @emails = paginates(Email.all)
   end
 
